@@ -21,12 +21,12 @@ req = urllib.request.Request(urlutsc)
 req.add_header('X-Requested-With', 'XMLHttpRequest')
 contents = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
 try:
-    psw = int(contents["data"]["records"]["sw"]["stations"])
+    psw = int(contents["data"]["records"]["sw"]["numStations"])
 except:
     print("error sw")
     psw = 0
 try:
-    pev = int(contents["data"]["records"]["ev"]["stations"])
+    pev = int(contents["data"]["records"]["ev"]["numStations"])
 except:
     print("error ev")
     pev = 0
