@@ -8,18 +8,21 @@ ids = ["X073 ", "0047 ", "0131 ", "0049 ", "0036 ", "0078 ", "0075 ", "0073 ", "
 import urllib.request
 import json
 import os
+import MySQLdb
+import ssl
+context = ssl._create_unverified_context()
+db=MySQLdb.connect("127.0.0.1","wifistats","uoft","uoftwifistats",port=3306)
 
-
-contents = urllib.request.urlopen(urlmp).read()
+contents = urllib.request.urlopen(urlmp, context=context).read()
 r = contents.decode("utf-8").split("Number of people : <BQ>")[1].split("<P><font")[0]
 pmp = int(r)
-contents = urllib.request.urlopen(urlab).read()
+contents = urllib.request.urlopen(urlab, context=context).read()
 r = contents.decode("utf-8").split("Number of people : <BQ>")[1].split("<P><font")[0]
 pab = int(r)
 
 req = urllib.request.Request(urlutsc)
 req.add_header('X-Requested-With', 'XMLHttpRequest')
-contents = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
+contents = json.loads(urllib.request.urlopen(req, context=context).read().decode("utf-8"))
 try:
     psw = int(contents["data"]["records"]["sw"]["numStations"])
 except:
@@ -35,22 +38,23 @@ print("MP", pmp)
 print("AB", pab)
 print("SW", psw)
 print("EV", pev)
-os.system("gmetric -n \"People in MP\" -v %d -t \"uint32\""%pmp)
-os.system("gmetric -n \"People in AB\" -v %d -t \"uint32\""%pab)
-os.system("gmetric -n \"People in SW\" -v %d -t \"uint32\""%psw)
-os.system("gmetric -n \"People in EV\" -v %d -t \"uint32\""%pev)
 
+db.query("INSERT INTO stats (location, count) VALUES ('%s', %d)" %("MP",pmp))
+db.query("INSERT INTO stats (location, count) VALUES ('%s', %d)" %("AB",pab))
+db.query("INSERT INTO stats (location, count) VALUES ('%s', %d)" %("SW",psw))
+db.query("INSERT INTO stats (location, count) VALUES ('%s', %d)" %("EV",pev))
+db.commit()
 
-s = 0
-for i in ids:
-    print(i)
-    contents = urllib.request.urlopen(urlsg+i.strip()).read()
-    r = contents.decode("utf-8").split("Number of people : <BQ>")[1].split("<P><font")[0]
-    print(r)
-    try: 
-        n = int(r)
-    except:
-        n = 0
-    s += n
-print("St George", s)
-os.system("gmetric -n \"People in St George\" -v %d -t \"uint32\""%s)
+#s = 0
+#for i in ids:
+#    print(i)
+#    contents = urllib.request.urlopen(urlsg+i.strip(), context=context).read()
+#    r = contents.decode("utf-8").split("Number of people : <BQ>")[1].split("<P><font")[0]
+#    print(r)
+#    try: 
+#        n = int(r)
+#    except:
+#        n = 0
+#    s += n
+#print("St George", s)
+#db.query("INSERT INTO stats (location, count) VALUES('%s', %d)" %("StGeorge",s))
